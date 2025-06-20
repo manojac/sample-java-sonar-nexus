@@ -2,9 +2,9 @@ pipeline {
   agent any
 
   environment {
-    SONARQUBE = 'MySonar'                          // Name configured in Jenkins SonarQube plugin
-    SONAR_TOKEN = credentials('sonar-token-id')    // Jenkins secret text
-    NEXUS_CRED = credentials('nexus-cred-id')      // Jenkins Username/Password credential
+    SONARQUBE = 'MySonar'                          // Must match Jenkins SonarQube config
+    SONAR_TOKEN = credentials('sonar-token-id')    // Jenkins secret text credential
+    NEXUS_CRED = credentials('nexus-cred-id')      // Jenkins username/password credential
   }
 
   stages {
@@ -17,7 +17,12 @@ pipeline {
     stage('SonarQube Analysis') {
       steps {
         withSonarQubeEnv("${SONARQUBE}") {
-          sh 'mvn clean verify sonar:sonar -Dsonar.login=$SONAR_TOKEN'
+          sh """
+            mvn clean verify sonar:sonar \
+              -Dsonar.projectKey=sample-java-app \
+              -Dsonar.host.url=http://13.200.222.92:9000 \
+              -Dsonar.login=${SONAR_TOKEN}
+          """
         }
       }
     }
@@ -33,15 +38,16 @@ pipeline {
         nexusArtifactUploader(
           nexusVersion: 'nexus3',
           protocol: 'http',
-          nexusUrl: 'http://13.200.222.92:30801',
+          nexusUrl: '13.200.222.92:30801',
           groupId: 'com.devops',
+          artifactId: 'sample-java-app',
           version: '1.0',
           repository: 'maven-releases',
           credentialsId: 'nexus-cred-id',
           artifacts: [[
             artifactId: 'sample-java-app',
             classifier: '',
-            file: 'target/sample-java-app*.jar',
+            file: 'target/sample-java-app-1.0.jar',
             type: 'jar'
           ]]
         )
