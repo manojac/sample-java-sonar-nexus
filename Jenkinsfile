@@ -41,7 +41,7 @@ pipeline {
           artifacts: [[
             artifactId: 'sample-java-app',
             classifier: '',
-            file: 'target/sample-java-app.jar',
+            file: 'target/sample-java-app*.jar',
             type: 'jar'
           ]]
         )
