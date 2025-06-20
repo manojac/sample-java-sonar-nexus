@@ -2,22 +2,22 @@ pipeline {
   agent any
 
   environment {
-    SONARQUBE = 'MySonar' // Must match Jenkins SonarQube server name
-    SONAR_TOKEN = credentials('sonar-token-id') // Create in Jenkins: kind = Secret text
-    NEXUS_CRED = credentials('nexus-cred-id')   // Create in Jenkins: kind = Username with password
+    SONARQUBE = 'MySonar'                          // Name configured in Jenkins SonarQube plugin
+    SONAR_TOKEN = credentials('sonar-token-id')    // Jenkins secret text
+    NEXUS_CRED = credentials('nexus-cred-id')      // Jenkins Username/Password credential
   }
 
   stages {
     stage('Checkout') {
       steps {
-        git branch: 'main', url: 'https://github.com/akash-devops2/sample-java-sonar-nexus.git'
+        git 'https://github.com/akash-devops2/sample-java-sonar-nexus.git'
       }
     }
 
     stage('SonarQube Analysis') {
       steps {
         withSonarQubeEnv("${SONARQUBE}") {
-          sh "mvn clean verify sonar:sonar -Dsonar.login=${SONAR_TOKEN}"
+          sh 'mvn clean verify sonar:sonar -Dsonar.login=$SONAR_TOKEN'
         }
       }
     }
@@ -33,7 +33,7 @@ pipeline {
         nexusArtifactUploader(
           nexusVersion: 'nexus3',
           protocol: 'http',
-          nexusUrl: '3.110.42.224:30801',  // ✅ Use your Nexus service NodePort here
+          nexusUrl: 'http://13.200.222.92:30801',
           groupId: 'com.devops',
           version: '1.0',
           repository: 'maven-releases',
