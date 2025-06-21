@@ -2,9 +2,7 @@ pipeline {
   agent any
 
   environment {
-    SONARQUBE = 'MySonar'                          // Must match Jenkins SonarQube config
-    SONAR_TOKEN = credentials('sonar-token-id')    // Jenkins secret text credential
-    NEXUS_CRED = credentials('nexus-cred-id')      // Jenkins username/password credential
+    SONARQUBE = 'MySonar'                           // Matches Jenkins SonarQube Server config name
   }
 
   stages {
@@ -15,14 +13,17 @@ pipeline {
     }
 
     stage('SonarQube Analysis') {
+      environment {
+        SONAR_TOKEN = credentials('sonar-token-id')  // Inject inside stage to keep scope limited
+      }
       steps {
         withSonarQubeEnv("${SONARQUBE}") {
-          sh """
+          sh '''
             mvn clean verify sonar:sonar \
               -Dsonar.projectKey=sample-java-app \
               -Dsonar.host.url=http://52.66.69.172:30900 \
-              -Dsonar.login=${SONAR_TOKEN}
-          """
+              -Dsonar.login=$SONAR_TOKEN
+          '''
         }
       }
     }
@@ -34,6 +35,9 @@ pipeline {
     }
 
     stage('Upload to Nexus') {
+      environment {
+        NEXUS_CRED = credentials('nexus-cred-id')
+      }
       steps {
         nexusArtifactUploader(
           nexusVersion: 'nexus3',
