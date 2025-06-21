@@ -3,6 +3,13 @@ pipeline {
 
     environment {
         SONAR_HOST_URL = 'http://52.66.69.172:30900'
+        NEXUS_URL = 'http://13.203.193.59:8081'  // Replace with your actual Nexus URL
+        REPO = 'maven-releases'
+        GROUP_ID = 'com.devops'
+        ARTIFACT_ID = 'sample-java-app'
+        VERSION = '1.0'
+        PACKAGING = 'jar'
+        FILE = 'target/sample-java-app-1.0.jar'
     }
 
     stages {
@@ -35,7 +42,12 @@ pipeline {
 
         stage('Upload to Nexus') {
             steps {
-                echo "Upload to Nexus would happen here (plugin or curl-based depending on Nexus setup)."
+                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh '''
+                        curl -v -u $USERNAME:$PASSWORD --upload-file $FILE \
+                        $NEXUS_URL/repository/$REPO/$(echo $GROUP_ID | tr '.' '/')/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.$PACKAGING
+                    '''
+                }
             }
         }
     }
