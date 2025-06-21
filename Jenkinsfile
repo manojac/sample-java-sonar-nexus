@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Used by SonarQube plugin block
         SONAR_HOST_URL = 'http://52.66.69.172:30900'
     }
 
@@ -37,7 +36,6 @@ pipeline {
         stage('Upload to Nexus') {
             steps {
                 echo "Upload to Nexus would happen here (plugin or curl-based depending on Nexus setup)."
-                // You can add Nexus upload logic if needed.
             }
         }
     }
@@ -46,4 +44,8 @@ pipeline {
         success {
             echo 'Pipeline completed successfully!'
         }
-        failu
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
