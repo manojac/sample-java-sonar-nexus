@@ -20,7 +20,7 @@ pipeline {
           sh """
             mvn clean verify sonar:sonar \
               -Dsonar.projectKey=sample-java-app \
-              -Dsonar.host.url=http://13.200.222.92:9000 \
+              -Dsonar.host.url=http://13.203.104.168:30900 \
               -Dsonar.login=${SONAR_TOKEN}
           """
         }
@@ -38,7 +38,7 @@ pipeline {
         nexusArtifactUploader(
           nexusVersion: 'nexus3',
           protocol: 'http',
-          nexusUrl: '13.200.222.92:30801',
+          nexusUrl: '13.203.104.168:30801',
           groupId: 'com.devops',
           artifactId: 'sample-java-app',
           version: '1.0',
