@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = 'http://13.203.213.172:30900/'
-        NEXUS_URL = 'http://13.203.213.172:30801'  // Replace with your actual Nexus URL
+        SONAR_HOST_URL = 'http://13.234.186.195:30900/'
+        NEXUS_URL = 'http://13.234.186.195:30801'  // Replace with your actual Nexus URL
         REPO = 'maven-releases'
         GROUP_ID = 'com.devops'
         ARTIFACT_ID = 'sample-java-app'
@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/akash-devops2/sample-java-sonar-nexus.git', branch: 'main'
+                git url: '', branch: 'main'
             }
         }
 
