@@ -80,42 +80,55 @@ pipeline {
                 }
             }
         }
-        // Jenkinsfile (declarative)
-        /* --------------------------------------------- */
-        /* build, tag and push Docker image to Nexus     */
-        /* --------------------------------------------- */
         stage('Build & Push Docker image') {
-            agent { label 'docker-enabled' }   // node must have Docker daemon/CLI
-            steps {
-                sh 'cp target/sample-java-app-1.0.jar app.jar'   // jar into build context
+            agent { label 'docker-enabled' }          // node must have Docker CLI & access
+        environment {
+        FULL_NAME = "${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}"
+    }
+           steps {
+        /* ----------------------------------------------------------
+         * 1. Pick up the fresh JAR that Maven just produced
+         *    – ignores *-original or *-javadoc jars
+         * ---------------------------------------------------------- */
+                  sh '''
+                    echo "Listing jars in target/ ==="
+                     ls -l target/*.jar || true
 
-                script {
-                    /* login, build and push */
-                    docker.withRegistry("http://${REGISTRY_URL}", REGISTRY_CREDENTIAL) {
+                     # Use newest non-*original.jar
+                     JAR=$(ls -t target/*.jar | grep -v original | head -n1)
+                     echo "Copying $JAR → app.jar"
+                     cp "$JAR" app.jar
+                 '''
 
-                        def fullName = "${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}"
-                        def image = docker.build(
-                            "${fullName}:${IMAGE_TAG}",
-                            "--build-arg JAR_FILE=app.jar ."
-                        )
-
-                        image.push()         // versioned tag
-                        image.push('latest') // floating tag
-                    }
-                }
-            }
-            post {
-                always {
-                    /* keep agents clean */
-                    sh '''
-                      docker rmi ${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}:${IMAGE_TAG} || true
-                      docker rmi ${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}:latest || true
-                      docker rmi $IMAGE || true
-                    '''
-                }
+        /* ----------------------------------------------------------
+         * 2. Build & push the image
+         * ---------------------------------------------------------- */
+        script {
+            docker.withRegistry("http://${REGISTRY_URL}", REGISTRY_CREDENTIAL) {
+                def image = docker.build(
+                    "${FULL_NAME}:${IMAGE_TAG}",
+                    "--build-arg JAR_FILE=app.jar ."
+                )
+                image.push()
+                image.push('latest')          // optional: tag as latest
             }
         }
-    }  // ← closes stages
+    }
+
+    /* --------------------------------------------------------------
+     * 3. Always clean up local images so subsequent builds don’t run
+     *    out of disk space – ignore failure if daemon is inaccessible
+     * -------------------------------------------------------------- */
+    post {
+        always {
+            sh """
+                docker rmi ${FULL_NAME}:${IMAGE_TAG}  || true
+                docker rmi ${FULL_NAME}:latest        || true
+            """
+        }
+    }
+}
+
 
     /* ---------- pipeline-level notifications ---------- */
     post {
