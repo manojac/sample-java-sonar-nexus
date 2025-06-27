@@ -81,31 +81,6 @@ pipeline {
             }
         }
         // Jenkinsfile (declarative)
-stage('Build') {
-    steps {
-        sh 'mvn -B -DskipTests clean package'
-    }
-}
-
-stage('Copy JAR') {
-    steps {
-        script {
-            // Grab the first .jar produced in this build
-            def jarPath = sh(
-                    script: 'ls -1 **/target/*.jar | head -n 1',
-                    returnStdout: true
-            ).trim()
-
-            if (!jarPath) {
-                error "No JAR found under **/target/*.jar – check the build log."
-            }
-
-            sh "cp ${jarPath} app.jar"
-        }
-    }
-}
-
-
         /* --------------------------------------------- */
         /* build, tag and push Docker image to Nexus     */
         /* --------------------------------------------- */
