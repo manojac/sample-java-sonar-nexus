@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = 'http://http://13.233.237.182:30900/'
-        NEXUS_URL = 'http://http://13.233.237.182:30801'  // Replace with your actual Nexus URL
+        SONAR_HOST_URL = 'http://13.233.237.182:30900'
+        NEXUS_URL = 'http://13.233.237.182:30801'  // Replace with your actual Nexus URL
         REPO = 'maven-releases'
         GROUP_ID = 'com.devops'
         ARTIFACT_ID = 'sample-java-app'
