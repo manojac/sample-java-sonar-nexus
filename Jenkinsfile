@@ -87,7 +87,14 @@ pipeline {
         stage('Build & Push Docker image') {
             agent { label 'docker-enabled' }   // node must have Docker daemon/CLI
             steps {
-                sh 'cp target/sample-java-app-1.0.jar app.jar'   // jar into build context
+                sh '''
+                   echo "Looking for jar in target/..."
+                   ls -lh target/
+
+                  JAR=$(ls -t target/*.jar | grep -v original | head -n1)
+                  echo "Copying $JAR → app.jar"
+                  cp "$JAR" app.jar
+                '''
 
                 script {
                     /* login, build and push */
