@@ -48,14 +48,14 @@ pipeline {
                         curl -v -u $USERNAME:$PASSWORD --upload-file $FILE \
                         $NEXUS_URL/repository/$REPO/$(echo $GROUP_ID | tr '.' '/')/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.$PACKAGING
                     '''
-                    environment {
+    environment { 
         REGISTRY_URL        = 'http://13.233.237.182:8083'      // 🔄 change me
         IMAGE_NAME          = '13.233.237.182:8083/docker-hosted/my-app:1.0'             // 🔄 change me
         REGISTRY_CREDENTIAL = 'nexus-docker-creds'          // 🔄 credential ID
         IMAGE_TAG           = "${env.BUILD_NUMBER}"         // build-specific tag
     }
 
-    stages {
+    
         /* …your existing Build + Upload to Nexus stages… */
 
         stage('Build & Push Docker image') {
@@ -78,10 +78,6 @@ pipeline {
                         // ❹ Update / push the floating "latest" tag
                         image.push('latest')
                     }
-                }
-            }
-        }
-    }
                 }
             }
         }
