@@ -27,7 +27,7 @@ pipeline {
                             mvn clean verify sonar:sonar \
                               -Dsonar.projectKey=sample-java-app \
                               -Dsonar.host.url=$SONAR_HOST_URL \
-                              -Dsonar.login=$SONAR_TOKEN
+                              -Dsonar.login=$SONAR_TOKEN \
                               -Dsonar.verbose=true
                         '''
                     }
