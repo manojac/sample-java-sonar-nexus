@@ -24,6 +24,18 @@ pipeline {
 
     /* ---------- pipeline flow ---------- */
     stages {
+        
+        stage('Who am I?') {
+            steps {
+                sh '''
+                    echo "=== identity ==="
+                    id -un
+                    id -Gn
+                    echo "=== socket perms ==="
+                    ls -l /var/run/docker.sock || true
+                '''
+            }
+        }
 
         stage('Checkout') {
             steps {
