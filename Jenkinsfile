@@ -1,94 +1,112 @@
 pipeline {
-    agent any
+    /* ---------- where the build runs ---------- */
+    agent any                   // or:  agent { label 'docker-enabled' }
 
+    /* ---------- global variables ---------- */
     environment {
+        /* Sonar & Maven-artifact settings */
         SONAR_HOST_URL = 'http://13.233.237.182:30900'
-        NEXUS_URL = 'http://13.233.237.182:30801'  // Replace with your actual Nexus URL
-        REPO = 'maven-releases'
-        GROUP_ID = 'com.devops'
-        ARTIFACT_ID = 'sample-java-app'
-        VERSION = '1.0'
-        PACKAGING = 'jar'
-        FILE = 'target/sample-java-app-1.0.jar'
+        NEXUS_URL      = 'http://13.233.237.182:30801'    // 🔄 Nexus host:port (Maven repo)
+        REPO           = 'maven-releases'
+        GROUP_ID       = 'com.devops'
+        ARTIFACT_ID    = 'sample-java-app'
+        VERSION        = '1.0'
+        PACKAGING      = 'jar'
+        FILE           = 'target/sample-java-app-1.0.jar'
+
+        /* Docker / container registry settings */
+        REGISTRY_URL        = '13.233.237.182:8083'       // 🔄 Nexus Docker repo host:port
+        REGISTRY_REPO       = 'docker-hosted'             // 🔄 Nexus *Docker*-type repo name
+        IMAGE_NAME          = 'my-app'                    // 🔄 image repo/name (no tag)
+        REGISTRY_CREDENTIAL = 'nexus-docker-creds'        // 🔄 Jenkins cred ID (user/pass)
+        IMAGE_TAG           = "${env.BUILD_NUMBER}"       // pipeline build number
     }
 
+    /* ---------- pipeline flow ---------- */
     stages {
+
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/manojac/sample-java-sonar-nexus.git', branch: 'main'
+                git url: 'https://github.com/manojac/sample-java-sonar-nexus.git',
+                    branch: 'main'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                withCredentials([string(credentialsId: 'sonar-token',
+                                        variable: 'SONAR_TOKEN')]) {
                     withSonarQubeEnv('MySonar') {
                         sh '''
-                            mvn clean verify sonar:sonar \
-                              -Dsonar.projectKey=sample-java-app \
-                              -Dsonar.host.url=$SONAR_HOST_URL \
-                              -Dsonar.login=$SONAR_TOKEN \
-                              -Dsonar.verbose=true
+                          mvn -B clean verify sonar:sonar \
+                            -Dsonar.projectKey=sample-java-app \
+                            -Dsonar.host.url=$SONAR_HOST_URL \
+                            -Dsonar.login=$SONAR_TOKEN \
+                            -Dsonar.verbose=true
                         '''
                     }
                 }
             }
         }
 
-        stage('Build') {
+        stage('Build JAR') {
             steps {
-                sh 'mvn package'
+                sh 'mvn -B package'
             }
         }
 
-        stage('Upload to Nexus') {
+        stage('Upload JAR to Nexus') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'nexus-creds',
+                                                  usernameVariable: 'USERNAME',
+                                                  passwordVariable: 'PASSWORD')]) {
                     sh '''
-                        curl -v -u $USERNAME:$PASSWORD --upload-file $FILE \
-                        $NEXUS_URL/repository/$REPO/$(echo $GROUP_ID | tr '.' '/')/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.$PACKAGING
+                      curl -v -u $USERNAME:$PASSWORD --upload-file $FILE \
+                      $NEXUS_URL/repository/$REPO/$(echo $GROUP_ID | tr '.' '/')/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.$PACKAGING
                     '''
-    environment { 
-        REGISTRY_URL        = 'http://13.233.237.182:8083'      // 🔄 change me
-        IMAGE_NAME          = '13.233.237.182:8083/docker-hosted/my-app:1.0'             // 🔄 change me
-        REGISTRY_CREDENTIAL = 'nexus-docker-creds'          // 🔄 credential ID
-        IMAGE_TAG           = "${env.BUILD_NUMBER}"         // build-specific tag
-    }
-
-    
-        /* …your existing Build + Upload to Nexus stages… */
-
-        stage('Build & Push Docker image') {
-            steps {
-                script {
-                    // ❶ Make sure the jar is where the Dockerfile can see it
-                    sh 'cp target/sample-java-app.jar app.jar'
-
-                    // ❷ Build the image (and hand the jar path via build-arg)
-                    docker.withRegistry("https://${REGISTRY_URL}",
-                                        REGISTRY_CREDENTIAL) {
-                        def image = docker.build(
-                            "${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}",
-                            "--build-arg JAR_FILE=app.jar ."
-                        )
-
-                        // ❸ Push versioned tag
-                        image.push()
-
-                        // ❹ Update / push the floating "latest" tag
-                        image.push('latest')
-                    }
                 }
             }
         }
-    }
 
+        /* --------------------------------------------- */
+        /* build, tag and push Docker image to Nexus     */
+        /* --------------------------------------------- */
+        stage('Build & Push Docker image') {
+            agent { label 'docker-enabled' }   // node must have Docker daemon/CLI
+            steps {
+                sh 'cp target/sample-java-app-1.0.jar app.jar'   // jar into build context
+
+                script {
+                    /* login, build and push */
+                    docker.withRegistry("http://${REGISTRY_URL}", REGISTRY_CREDENTIAL) {
+
+                        def fullName = "${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}"
+                        def image = docker.build(
+                            "${fullName}:${IMAGE_TAG}",
+                            "--build-arg JAR_FILE=app.jar ."
+                        )
+
+                        image.push()         // versioned tag
+                        image.push('latest') // floating tag
+                    }
+                }
+            }
+            post {
+                always {
+                    /* keep agents clean */
+                    sh '''
+                      docker rmi ${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}:${IMAGE_TAG} || true
+                      docker rmi ${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}:latest || true
+                    '''
+                }
+            }
+        }
+    }  // ← closes stages
+
+    /* ---------- pipeline-level notifications ---------- */
     post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
-        }
+        success { echo 'Pipeline completed successfully!' }
+        failure { echo 'Pipeline failed!' }
     }
-}
+}   // ← final brace closes pipeline
+
