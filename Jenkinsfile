@@ -48,6 +48,40 @@ pipeline {
                         curl -v -u $USERNAME:$PASSWORD --upload-file $FILE \
                         $NEXUS_URL/repository/$REPO/$(echo $GROUP_ID | tr '.' '/')/$ARTIFACT_ID/$VERSION/$ARTIFACT_ID-$VERSION.$PACKAGING
                     '''
+                    environment {
+        REGISTRY_URL        = 'http://13.233.237.182:8083'      // 🔄 change me
+        IMAGE_NAME          = '13.233.237.182:8083/docker-hosted/my-app:1.0'             // 🔄 change me
+        REGISTRY_CREDENTIAL = 'nexus-docker-creds'          // 🔄 credential ID
+        IMAGE_TAG           = "${env.BUILD_NUMBER}"         // build-specific tag
+    }
+
+    stages {
+        /* …your existing Build + Upload to Nexus stages… */
+
+        stage('Build & Push Docker image') {
+            steps {
+                script {
+                    // ❶ Make sure the jar is where the Dockerfile can see it
+                    sh 'cp target/sample-java-app.jar app.jar'
+
+                    // ❷ Build the image (and hand the jar path via build-arg)
+                    docker.withRegistry("https://${REGISTRY_URL}",
+                                        REGISTRY_CREDENTIAL) {
+                        def image = docker.build(
+                            "${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}",
+                            "--build-arg JAR_FILE=app.jar ."
+                        )
+
+                        // ❸ Push versioned tag
+                        image.push()
+
+                        // ❹ Update / push the floating "latest" tag
+                        image.push('latest')
+                    }
+                }
+            }
+        }
+    }
                 }
             }
         }
