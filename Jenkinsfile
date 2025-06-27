@@ -27,7 +27,8 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/manojac/sample-java-sonar-nexus.git',
+                sh 'echo "I am $(id -un) with groups: $(id -Gn)"'
+               git url: 'https://github.com/manojac/sample-java-sonar-nexus.git',
                     branch: 'main'
             }
         }
@@ -97,6 +98,7 @@ pipeline {
                     sh '''
                       docker rmi ${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}:${IMAGE_TAG} || true
                       docker rmi ${REGISTRY_URL}/${REGISTRY_REPO}/${IMAGE_NAME}:latest || true
+                      docker rmi $IMAGE || true
                     '''
                 }
             }
