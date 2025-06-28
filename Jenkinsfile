@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL          = 'http://13.235.82.221:30900'
-        NEXUS_URL               = 'http://13.235.82.221:30001'
+        SONAR_HOST_URL          = 'http://13.233.237.182:30900'
+        NEXUS_URL               = 'http://13.233.237.182:30801'
         NEXUS_REPO              = 'maven-releases'
         GROUP_ID                = 'com.devops'
         ARTIFACT_ID             = 'sample-java-app' 
         VERSION                 = "1.${BUILD_NUMBER}"
         FILE_NAME               = "sample-java-app-${VERSION}.jar"
         DOCKER_IMAGE_NAME       = 'sample-java-app'
-        NEXUS_DOCKER_REGISTRY   = '13.235.82.221:30002'
+        NEXUS_DOCKER_REGISTRY   = '13.233.237.182:30802'
     }
 
     stages {
