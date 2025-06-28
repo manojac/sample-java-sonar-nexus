@@ -10,7 +10,7 @@ pipeline {
         VERSION                 = "1.${BUILD_NUMBER}"
         FILE_NAME               = "sample-java-app-${VERSION}.jar"
         DOCKER_IMAGE_NAME       = 'sample-java-app'
-        NEXUS_DOCKER_REGISTRY   = '13.233.237.182:30802'
+        NEXUS_DOCKER_REGISTRY   = '13.233.237.182:30001'
     }
 
     stages {
