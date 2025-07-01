@@ -4,13 +4,13 @@ pipeline {
     environment {
         JAVA_HOME = "/usr/lib/jvm/java-21-amazon-corretto.x86_64"
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
-        GIT_REPO_URL = 'https://github.com/jenkins-docs/simple-java-maven-app.git'
-        SONAR_URL = 'http://65.2.137.238:30900'
-        SONAR_TOKEN = 'sqa_654ca1dfc374dfbab096f5aa62d3238e39a54ba5'
-        SONAR_CRED_ID = 'sonar'
+        GIT_REPO_URL = 'https://github.com/manojac/sample-java-sonar-nexus.git'
+        SONAR_URL = 'http://3.111.214.55:30900'
+        SONAR_TOKEN = 'sqa_641d14dfaf19ef05a5905eaca8e3abd4bc7d9a7f'
+        SONAR_CRED_ID = 'sonar-token'
         MAX_BUILDS_TO_KEEP = 5
-        NEXUS_URL = 'http://65.2.137.238:30801/repository/sample-releases/'
-        NEXUS_DOCKER_REPO = '65.2.137.238:30002' // Updated to correct HTTP port
+        NEXUS_URL = 'http://3.111.214.55:30801'
+        NEXUS_DOCKER_REPO = '3.111.214.55:30002' // Updated to correct HTTP port
         NEXUS_CREDENTIAL_ID = 'nexus-creds'
     }
 
