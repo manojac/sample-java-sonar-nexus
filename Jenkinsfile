@@ -7,7 +7,7 @@ pipeline {
         GIT_REPO_URL = 'https://github.com/manojac/sample-java-sonar-nexus.git'
         SONAR_URL = 'http://3.111.214.55:30900'
         SONAR_TOKEN = 'squ_b32ed949b7fcc7d845ae15bac7687934c92c6bdd'
-        SONAR_CRED_ID = 'my-sonar'
+        SONAR_CRED_ID = 'id-sonar-token'
         MAX_BUILDS_TO_KEEP = 5
         NEXUS_URL = 'http://3.111.214.55:30801'
         NEXUS_DOCKER_REPO = '3.111.214.55:30002' // Updated to correct HTTP port
