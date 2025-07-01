@@ -6,8 +6,8 @@ pipeline {
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         GIT_REPO_URL = 'https://github.com/manojac/sample-java-sonar-nexus.git'
         SONAR_URL = 'http://3.111.214.55:30900'
-        SONAR_TOKEN = 'sqa_641d14dfaf19ef05a5905eaca8e3abd4bc7d9a7f'
-        SONAR_CRED_ID = 'sonar-token'
+        SONAR_TOKEN = 'squ_b32ed949b7fcc7d845ae15bac7687934c92c6bdd'
+        SONAR_CRED_ID = 'my-sonar'
         MAX_BUILDS_TO_KEEP = 5
         NEXUS_URL = 'http://3.111.214.55:30801'
         NEXUS_DOCKER_REPO = '3.111.214.55:30002' // Updated to correct HTTP port
@@ -21,7 +21,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: "${GIT_REPO_URL}", branch: 'master'
+                git url: "${GIT_REPO_URL}", branch: 'main'
             }
         }
 
